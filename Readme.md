@@ -1,14 +1,73 @@
-linux-0.01 On Ubuntu 18.04 with GCC-7.3, NASM assembler & LLVM Clang
+# Linux 0.01 — Modern Build
 
-First of all, thanks Mariuz!
+A modernized build of the original Linux 0.01 kernel (written by Linus Torvalds in 1991), updated to compile with contemporary toolchains on modern 32-bit and 64-bit x86 systems. The assembly files have been ported from the original GAS syntax to NASM, and the C code compiles cleanly with modern GCC.
 
-After a lot of time, I managed to compile this revised version of the first kernel on machines with Ubuntu 18.04 64 and 32 bit versions. So you can compile them and try them on 64 and 32 bit Intel machines.
+The kernel boots from a floppy image and runs in emulators such as QEMU and Bochs.
 
-The kernel runs in both emulators: QEMU ver. 2.11.1 and Bochs ver 2.6. and that was a great success for me ...
+## Prerequisites
 
-I also uploaded the bochsrc.txt file so that the bochs runs from the command line from the root where the kernel(Image) is and qemu runs from the cmd line by the command: make run, but first unzip the file hd_oldlinux.img.zip.
+Install the following packages (Debian/Ubuntu):
 
-In this branch: working-ver, I'll update new stuffs, actually stuffs compiled with new tools for compiling. At this moment you must have installed NASM assembler & LLVM's Clang compiler on your system. For fans of the authentic kernel as mr. Torvalds wrote it with the available tools for that time, I left the Master branch, which I will no longer update with new things. So on this: working-ver branch I'll update new things.
+```bash
+sudo apt-get update
+sudo apt-get install build-essential gcc gcc-multilib nasm qemu-system-x86
+```
 
-Enjoy work and improvement. 
-sincerely Isoux.
+You also need the hard-disk image included in the repository:
+
+```bash
+unzip hd_oldlinux.img.zip
+```
+
+## Building
+
+Build the kernel image:
+
+```bash
+make
+```
+
+This produces a raw boot image called `Image`.
+
+### Generating a Bootable Floppy Image
+
+To generate a full 1.44 MB floppy disk image suitable for use with emulators:
+
+```bash
+make bootimage
+```
+
+This creates a file called `bootimage` — a zero-padded 1.44 MB image with the kernel written at the start.
+
+## Running
+
+### QEMU
+
+```bash
+make run
+```
+
+### Bochs
+
+Make sure `bochsrc.txt` is in the project root, then:
+
+```bash
+bochs -f bochsrc.txt
+```
+
+## Other Make Targets
+
+| Target       | Description                                      |
+|--------------|--------------------------------------------------|
+| `make`       | Build the kernel `Image`                         |
+| `make bootimage` | Build a padded 1.44 MB bootable floppy image |
+| `make run`   | Launch the kernel in QEMU                        |
+| `make dump`  | Disassemble `tools/system` to `System.dum`       |
+| `make clean` | Remove all build artifacts                       |
+| `make dep`   | Regenerate header dependency information         |
+
+## Credits
+
+- **Linus Torvalds** — original Linux 0.01 kernel (1991)
+- **Mariuz** — initial modernisation fork ([mariuz/linux-0.01](https://github.com/mariuz/linux-0.01))
+- **Isoux** — NASM port, GCC/Clang build fixes, and ongoing maintenance
