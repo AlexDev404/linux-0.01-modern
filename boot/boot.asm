@@ -48,6 +48,7 @@ END_SEG	equ	SYS_SEG + (SYS_SIZE+15)/16
 
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; BOOT CODE
+[GLOBAL main]
 main:
 ;----------------------------------------------------
 ; boot load starts at 07C0:0000 or 0000:7C00, then

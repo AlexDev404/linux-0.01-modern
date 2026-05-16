@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Linux: Debug kernel",
+      "type": "gdb",
+      "request": "attach",
+      "executable": "${workspaceFolder}\\kernel.sym",
+      "target": "localhost:1234",
+      "remote": true,
+      "cwd": "${workspaceFolder}",
+      "gdbpath": "C:\\mingw64\\bin\\gdb.exe",
+      "debugger_args": [
+        "-ex", "set architecture i386",
+        "-ex", "set osabi none"
+      ],
+      "autorun": [
+        "b main"
+      ],
+      "valuesFormatting": "prettyPrinters"
+    }
+  ]
+}

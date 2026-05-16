@@ -66,10 +66,10 @@ bootimage: Image
 	dd if=Image of=bootimage conv=notrunc
 
 run:
-	qemu-system-i386 -drive format=raw,file=Image,index=0,if=floppy -boot a -hdb hd_oldlinux.img -m 8 -machine pc-0.10
+	qemu-system-i386 -drive format=raw,file=Image,index=0,if=floppy -boot a -hdb hd_oldlinux.img -m 32
 
 debug: Image symbols
-	qemu-system-i386 -drive format=raw,file=Image,index=0,if=floppy -boot a -hdb hd_oldlinux.img -m 8 -machine pc-0.10 -s -S
+	qemu-system-i386 -drive format=raw,file=Image,index=0,if=floppy -boot a -hdb hd_oldlinux.img -m 32 -s -S
 
 symbols: tools/system
 	objcopy --only-keep-debug tools/system kernel.sym

@@ -1,0 +1,8 @@
+*.o
+*.bin
+*.map
+*.sym
+*.a
+system
+boot/boot
+boot.inc
