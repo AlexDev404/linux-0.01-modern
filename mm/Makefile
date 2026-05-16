@@ -1,7 +1,7 @@
 # Makefile for mm
 
 CC	=gcc
-CFLAGS	=-Wall -O -std=gnu89 -fstrength-reduce  -fomit-frame-pointer -m32 \
+CFLAGS	=-Wall -O -std=gnu89 -fomit-frame-pointer -m32 \
 	-fno-stack-protector -finline-functions -nostdinc -fno-builtin -g -I../include
 AS	=nasm -f elf32
 AR	=ar 

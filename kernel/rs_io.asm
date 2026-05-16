@@ -152,3 +152,5 @@ write_buffer_empty:
 	out dx, al
 	ret
 
+
+section .note.GNU-stack noalloc noexec nowrite progbits

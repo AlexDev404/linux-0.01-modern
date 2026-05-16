@@ -15,16 +15,9 @@
  * interrupt, as we use trap-gates. Hopefully all is well.
  */
  
-/* 1.jul.2019. by ISOUX
- * The code has been rebuilt by introducing an inline assembler functions 
- * ( they all start with the prefix asm )written in the intel syntax. 
- * The file is compiling with clang (LLVM).
- */
-
 #include <linux/sched.h>
 #include <linux/tty.h>
-#include <asm/gas_regs.h>
-//#include <asm/io.h>
+#include <asm/io.h>
 #include <asm/system.h>
 
 #define SCREEN_START 0xb8000
@@ -55,47 +48,55 @@ unsigned char attr=0x07;
  */
 #define RESPONSE "\033[?1;2c"
 
-/* Folows static inline assembler functions 
- *	This intel sintax is posible because of 
- *	using LLVM clang compiler 
- */
-
-static inline void asm_scrup_1(void) {
-__asm{	mov ax, (SPACE_ATTR)
-			cld
-			rep movsd dword ptr es:[edi], dword ptr[esi]
-			mov ecx,edx
-			rep stosw }
+static inline void asm_scrup_1(unsigned long dest, unsigned long src,
+				unsigned long count, unsigned long cols) {
+	__asm__ __volatile__(
+		"cld\n\t"
+		"rep ; movsl\n\t"
+		"movl %%edx,%%ecx\n\t"
+		"rep ; stosw"
+		:: "D" (dest), "S" (src), "c" (count), "d" (cols),
+		   "a" (SPACE_ATTR)
+		: "memory"
+	);
 }
 
-static inline void asm_scrup_2(void) {
-__asm{	mov eax, (SPACE_ATTR_X2)
-			cld 
-			rep stosd }	
-} 
+static inline void asm_scrup_2(unsigned long dest, unsigned long count) {
+	__asm__ __volatile__(
+		"cld\n\t"
+		"rep ; stosl"
+		:: "D" (dest), "c" (count), "a" (SPACE_ATTR_X2)
+		: "memory"
+	);
+}
 
-static inline void asm_scrdown(void) {
-__asm{	mov ax,(SPACE_ATTR)
-			std
-			rep movsd dword ptr es:[edi], dword ptr[esi]
-			add edi,2
-			mov ecx,edx
-			rep stosw }
-} 
+static inline void asm_scrdown(unsigned long dest, unsigned long src,
+				unsigned long count, unsigned long cols) {
+	__asm__ __volatile__(
+		"std\n\t"
+		"rep ; movsl\n\t"
+		"addl $2,%%edi\n\t"
+		"movl %%edx,%%ecx\n\t"
+		"rep ; stosw\n\t"
+		"cld"
+		:: "D" (dest), "S" (src), "c" (count), "d" (cols),
+		   "a" (SPACE_ATTR)
+		: "memory"
+	);
+}
 
-static inline void asm_erease() {
-__asm{	mov ax,(SPACE_ATTR)
-			cld
-			rep	stosw }
+static inline void asm_erase(unsigned long dest, unsigned long count) {
+	__asm__ __volatile__(
+		"cld\n\t"
+		"rep ; stosw"
+		:: "D" (dest), "c" (count), "a" (SPACE_ATTR)
+		: "memory"
+	);
 }
 
 static inline void asm_char_write(unsigned char c) {
-__asm{	mov al, byte ptr [c]
-			mov edx,[pos]
-			mov ah, byte ptr [attr] /* mov ah,byte ptr SPACE_ATTR */
-			mov word ptr[edx],ax }
+	*(unsigned short *)pos = ((unsigned short)attr << 8) | c;
 }
-/* End of static inline asemmbler functions */
 
 static inline void gotoxy(unsigned int new_x,unsigned int new_y)
 {
@@ -108,12 +109,12 @@ static inline void gotoxy(unsigned int new_x,unsigned int new_y)
 
 static inline void set_origin(void)
 {
-	_cli();
+	cli();
 	outb_p(12,0x3d4);
 	outb_p(0xff&((origin-SCREEN_START)>>9),0x3d5);
 	outb_p(13,0x3d4);
 	outb_p(0xff&((origin-SCREEN_START)>>1),0x3d5);
-	_sti();
+	sti();
 }
 
 static void scrup(void)
@@ -122,37 +123,28 @@ static void scrup(void)
 		origin += columns<<1;
 		pos += columns<<1;
 		scr_end += columns<<1;
-		if (scr_end>SCREEN_END) {	
-			_edx(columns);
-			_ecx((lines-1)*columns>>1);
-			_edi(SCREEN_START);
-			_esi(origin);
-			asm_scrup_1(); 
+		if (scr_end>SCREEN_END) {
+			asm_scrup_1(SCREEN_START, origin,
+				(lines-1)*columns>>1, columns);
 			scr_end -= origin-SCREEN_START;
 			pos -= origin-SCREEN_START;
 			origin = SCREEN_START;
 		} else {
-					_ecx(columns>>1);
-					_edi(scr_end-(columns<<1));
-					asm_scrup_2();
+			asm_scrup_2(scr_end-(columns<<1), columns>>1);
 		}
 		set_origin();
 	} else {
-				_edx(columns);
-				_ecx((bottom-top-1)*columns>>1);
-				_edi(origin+(columns<<1)*top);
-				_esi(origin+(columns<<1)*(top+1));
-				asm_scrup_1();
+		asm_scrup_1(origin+(columns<<1)*top,
+			origin+(columns<<1)*(top+1),
+			(bottom-top-1)*columns>>1, columns);
 	}
 }
 
 static void scrdown(void)
 {
-	_edx(columns);
-	_ecx((bottom-top-1)*columns>>1);
-	_edi(origin+(columns<<1)*bottom-4);
-	_esi(origin+(columns<<1)*(bottom-1)-4);
-	asm_scrdown();
+	asm_scrdown(origin+(columns<<1)*bottom-4,
+		origin+(columns<<1)*(bottom-1)-4,
+		(bottom-top-1)*columns>>1, columns);
 }
 
 static void lf(void)
@@ -211,9 +203,7 @@ static void csi_J(int par)
 		default:
 			return;
 	}
-	_ecx(count);
-	_edi(start);
-	asm_erease();
+	asm_erase(start, count);
 }
 
 static void csi_K(int par)
@@ -239,9 +229,7 @@ static void csi_K(int par)
 		default:
 			return;
 	}
-	_ecx(count);
-	_edi(start);
-	asm_erease();
+	asm_erase(start, count);
 }
 
 void csi_m(void)
@@ -260,24 +248,24 @@ void csi_m(void)
 
 static inline void set_cursor(void)
 {
-	_cli();
+	cli();
 	outb_p(14,0x3d4);
 	outb_p(0xff&((pos-SCREEN_START)>>9),0x3d5);
 	outb_p(15,0x3d4);
 	outb_p(0xff&((pos-SCREEN_START)>>1),0x3d5);
-	_sti();
+	sti();
 }
 
 static void respond(struct tty_struct * tty)
 {
 	char * p = RESPONSE;
 
-	_cli();
+	cli();
 	while (*p) {
 		PUTCH(*p,tty->read_q);
 		p++;
 	}
-	_sti();
+	sti();
 	copy_to_cooked(tty);
 }
 

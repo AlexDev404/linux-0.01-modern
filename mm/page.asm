@@ -40,3 +40,5 @@ page_fault:
 		pop    eax
 		iret
 
+
+section .note.GNU-stack noalloc noexec nowrite progbits

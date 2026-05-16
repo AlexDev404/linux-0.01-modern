@@ -194,3 +194,5 @@ gdt:	dq 0x0000000000000000	; NULL descriptor */
 		dq 0x0000000000000000	; TEMPORARY - don't use
 		times 252*8 db 0			; space for LDT's and TSS's etc 
 
+
+section .note.GNU-stack noalloc noexec nowrite progbits

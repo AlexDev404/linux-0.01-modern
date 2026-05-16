@@ -170,3 +170,5 @@ stack_segment:
 general_protection:
 	push do_general_protection
 	jmp error_code
+
+section .note.GNU-stack noalloc noexec nowrite progbits
