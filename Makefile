@@ -67,12 +67,18 @@ bootimage: Image
 
 run:
 	qemu-system-i386 -drive format=raw,file=Image,index=0,if=floppy -boot a -hdb hd_oldlinux.img -m 8 -machine pc-0.10
-	
+
+debug: Image symbols
+	qemu-system-i386 -drive format=raw,file=Image,index=0,if=floppy -boot a -hdb hd_oldlinux.img -m 8 -machine pc-0.10 -s -S
+
+symbols: tools/system
+	objcopy --only-keep-debug tools/system kernel.sym
+
 dump:
 	objdump -D --disassembler-options=intel tools/system > System.dum
 
 clean:
-	rm -f Image bootimage System.map tmp_make boot/boot core
+	rm -f Image bootimage System.map tmp_make boot/boot core kernel.sym
 	rm -f init/*.o boot/*.o tools/system tools/system.bin
 	(cd boot;make clean)
 	(cd mm;make clean)
