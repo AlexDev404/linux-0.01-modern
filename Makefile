@@ -61,6 +61,10 @@ lib/lib.a:
 	(cd lib; make)
 
 	
+bootimage: Image
+	dd if=/dev/zero of=bootimage bs=1024 count=1440
+	dd if=Image of=bootimage conv=notrunc
+
 run:
 	qemu-system-i386 -drive format=raw,file=Image,index=0,if=floppy -boot a -hdb hd_oldlinux.img -m 8 -machine pc-0.10
 	
@@ -68,7 +72,7 @@ dump:
 	objdump -D --disassembler-options=intel tools/system > System.dum
 
 clean:
-	rm -f Image System.map tmp_make boot/boot core
+	rm -f Image bootimage System.map tmp_make boot/boot core
 	rm -f init/*.o boot/*.o tools/system tools/system.bin
 	(cd boot;make clean)
 	(cd mm;make clean)
