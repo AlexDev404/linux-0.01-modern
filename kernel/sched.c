@@ -9,8 +9,7 @@
 #include <signal.h>
 #include <linux/sys.h>
 #include <asm/system.h>
-#include <asm/gas_regs.h>
-//#include <asm/io.h>
+#include <asm/io.h>
 #include <asm/segment.h>
 
 #define LATCH (1193180/HZ)

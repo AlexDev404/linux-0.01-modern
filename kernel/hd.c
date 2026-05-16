@@ -4,8 +4,7 @@
 #include <linux/kernel.h>
 #include <linux/hdreg.h>
 #include <asm/system.h>
-#include <asm/gas_regs.h>
-//#include <asm/io.h>
+#include <asm/io.h>
 #include <asm/segment.h>
 
 /* 
